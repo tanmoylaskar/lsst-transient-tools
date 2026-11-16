@@ -29,6 +29,7 @@ def query_tns_neighbors(center, radius_arcsec, credentials):
         "tns_id": int(credentials["bot_id"]), "type": "bot",
         "name": credentials["bot_name"],
     })
+    # TNS expects sexagesimal coordinates and an explicitly unit-tagged radius.
     payload = {
         "ra": center.ra.to_string(unit=u.hourangle, sep=":", precision=6),
         "dec": center.dec.to_string(unit=u.deg, sep=":", precision=5, alwayssign=True),
@@ -46,6 +47,7 @@ def query_tns_neighbors(center, radius_arcsec, credentials):
         # Do not print the response, which could contain authentication details.
         raise RuntimeError(f"TNS API returned code {body.get('id_code', 'unknown')}")
     data = body.get("data")
+    # Handle both direct lists and lists wrapped in a reply object.
     matches = data.get("reply") if isinstance(data, dict) else data
     if not isinstance(matches, list):
         raise RuntimeError("Unexpected TNS response structure; not a no-match result")
@@ -65,7 +67,9 @@ def plot_inspection_light_curves(lc, object_id, zoom_width_days=1.0, *, show=Tru
 
     All bands compete in flux units, not S/N. The zoom has its own flux scale.
     Its x-axis fits the selected measurements rather than the entire selection window.
-    zoom_width_days is the TOTAL window width, centered on the selected visit.
+    zoom_width_days is the total window width, centered on the selected visit.
+    Set show=False to save or display the returned figure yourself. The second
+    return value records the peak visit and window bounds for later lookups.
     """
     if not np.isfinite(zoom_width_days) or zoom_width_days <= 0:
         raise ValueError("zoom_width_days must be finite and positive")
@@ -73,6 +77,7 @@ def plot_inspection_light_curves(lc, object_id, zoom_width_days=1.0, *, show=Tru
     points = lc[names].copy()
     for col in names[1:]:
         points[col] = points[col].to_numpy(dtype=float, na_value=np.nan)
+    # Keep signed fluxes, but exclude points that cannot be drawn with valid error bars.
     valid = (np.isfinite(points[names[1:]]).all(axis=1)
              & (points[names[3]] > 0) & points["band"].isin(list("ugrizy")))
     points = points.loc[valid].reset_index(drop=True)
@@ -140,6 +145,7 @@ def query_skybot_neighbors(center, epoch_utc, radius_arcsec=2.0, location="X05")
         raise
     if table is not None and len(table):
         table = table.copy()
+        # Recompute angular separation from the returned ephemeris coordinates.
         predicted = SkyCoord(table["RA"], table["DEC"], unit=(u.deg, u.deg))
         table["separation_arcsec"] = center.separation(predicted).arcsec
         table.sort("separation_arcsec")
@@ -152,13 +158,21 @@ def inspect_transient(object_id, *, object_table, lightcurves=None, catalog=None
                       neighbor_radius_arcsec=2., zoom_width_days=1.,
                       repository="dp2", collections="dp2",
                       tns_credentials=None, skybot_radius_arcsec=None):
-    """Inspect one candidate from explicit tables. See README for the input schema.
+    """Plot a candidate and optionally show images and nearby catalog entries.
+
+    Pass a candidate table containing the ID and ICRS position, plus one source
+    of photometry: a long-format table, a nested light curve in the candidate
+    row, or an LSDB catalog. See the README for column names and units.
 
     With panels=(), only the light curve is displayed and no external archive is
     queried (an explicitly supplied LSDB catalog may still read remote data).
     Use panels=ALL_PANELS for the complete dashboard. SkyBoT uses the largest
     absolute-flux plotted visit, converted from MJD TAI to UTC. Optional panel
     failures are recorded in result["errors"].
+    The result includes the original candidate row, the figure and peak
+    metadata, and data or links for the enabled panels. Angular sizes and
+    search radii are in arcseconds; SkyBoT inherits the neighbor radius unless
+    given a separate radius.
     """
     if coadd_band not in tuple("ugrizy"):
         raise ValueError("coadd_band must be one of u,g,r,i,z,y")
@@ -180,6 +194,7 @@ def inspect_transient(object_id, *, object_table, lightcurves=None, catalog=None
         try:
             from lsst.daf.butler import Butler
             from lsst.images import Box
+            # Reuse the Butler connection across candidates in the same notebook.
             cache_key = (repository, str(collections))
             if cache_key not in _BUTLERS:
                 _BUTLERS[cache_key] = Butler(repository, collections=collections)
@@ -194,6 +209,7 @@ def inspect_transient(object_id, *, object_table, lightcurves=None, catalog=None
                 raise LookupError(f'No {coadd_band}-band deep_coadd covers this position')
             cutout = None
             failures = []
+            # A position can overlap multiple patches; try another if the cutout hits an edge.
             for ref in refs:
                 try:
                     projection = butler.get('deep_coadd.sky_projection', dataId=ref.dataId)
@@ -222,6 +238,7 @@ def inspect_transient(object_id, *, object_table, lightcurves=None, catalog=None
             # Render only the Rubin image locally; the Legacy image loads in the browser.
             fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
             ax.imshow(image, origin="lower", cmap="gray", norm=norm, interpolation="nearest")
+            # Convert parent-patch pixels to coordinates relative to the cutout.
             ax.plot(xy.x-cutout.bbox.x.start, xy.y-cutout.bbox.y.start,
                     "+", color="red", ms=15, mew=1.5)
             ax.set_axis_off()
@@ -305,7 +322,7 @@ def inspect_transient(object_id, *, object_table, lightcurves=None, catalog=None
             result["errors"]["SkyBoT"] = f"{type(exc).__name__}: {exc}"
             print("SkyBoT query failed (not a no-match result):", result["errors"]["SkyBoT"])
 
-    # 4. Neighbor tables: independent queries, no-match and failure distinguished.
+    # Query each catalog independently so an outage does not hide other results.
     radius = neighbor_radius_arcsec*u.arcsec
     for service in ['NED', 'SIMBAD']:
         if service.lower() not in panels:

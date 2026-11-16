@@ -8,6 +8,7 @@ CURVE_COLUMNS = ("midpointMjdTai", "band", "psfDiffFlux", "psfDiffFluxErr_correc
 
 
 def _matching_rows(table, oid, label):
+    """Match integer and string IDs without rounding large identifiers."""
     if "diaObjectId" not in table:
         raise ValueError(f"{label} needs a diaObjectId column")
     ids = table["diaObjectId"]
@@ -19,7 +20,12 @@ def _matching_rows(table, oid, label):
 
 
 def resolve_target(object_id, object_table, *, lightcurves=None, catalog=None):
-    """Return (integer ID, candidate row, measurements) for a selected candidate."""
+    """Return (integer ID, candidate row, measurements) for one candidate.
+
+    object_table must contain exactly one row for the requested ID, with ra
+    and dec in ICRS degrees. Explicit long-format lightcurves take precedence
+    over nested photometry, followed by an optional LSDB lookup.
+    """
     if not re.fullmatch(r"[0-9]+", str(object_id)):
         raise ValueError("Use a nonnegative integer or decimal string for object_id")
     oid = int(object_id)
@@ -41,6 +47,7 @@ def resolve_target(object_id, object_table, *, lightcurves=None, catalog=None):
     elif isinstance(obj.get("diaObjectForcedSource"), pd.DataFrame):
         lc = obj["diaObjectForcedSource"]
     elif catalog is not None:
+        # Narrow the catalog to the position before applying the exact ID filter.
         match = catalog.cone_search(ra=ra, dec=dec, radius_arcsec=2.0)
         match = match.query(f"diaObjectId == {oid}").to_dask_dataframe().head(1, npartitions=-1)
         if match.empty:

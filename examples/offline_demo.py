@@ -14,6 +14,7 @@ def sample_tables():
     """Return synthetic candidate and photometry DataFrames."""
     object_id = 100000000000000001
     candidates = pd.DataFrame({"diaObjectId": [object_id], "ra": [53.0], "dec": [-28.0]})
+    # Use staggered visits and different amplitudes so the bands separate in the zoom.
     points = []
     for band, scale, offset in [("g", 0.65, 0.04), ("r", 0.85, 0.0), ("i", 1.0, 0.02)]:
         for day, flux in [
