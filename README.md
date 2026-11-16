@@ -105,6 +105,10 @@ For a figure without archive panels or notebook printing, use
 
 ## Examples, troubleshooting, and release status
 
+Open the [Rubin Science Platform example notebook](examples/rubin_science_platform.ipynb)
+in JupyterLab. It starts with a synthetic light curve, then lets you inspect a
+candidate from your own filtered LSDB catalog.
+
 Run `python examples/offline_demo.py` after installing to reproduce the figure
 above without any archive access or credentials. The demo uses the synthetic
 candidate ID `100000000000000001`.

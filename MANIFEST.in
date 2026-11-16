@@ -1,4 +1,4 @@
 include CONTRIBUTING.md
 recursive-include docs *.md *.png
-recursive-include examples *.py
+recursive-include examples *.py *.ipynb
 recursive-include tests *.py
