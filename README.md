@@ -30,7 +30,6 @@ cd lsst-transient-tools
 python -m pip install .
 ```
 
-The repository is private, so authenticate with a GitHub account that has access.
 In the JupyterLab file browser, open
 [`examples/rubin_science_platform.ipynb`](examples/rubin_science_platform.ipynb).
 If the terminal and notebook use different Python environments, run
