@@ -1,6 +1,8 @@
 # Contributing
 
-Open a GitHub issue for a bug or feature before undertaking a large change.
+Bug reports and feature suggestions are welcome. Contact the maintainer for
+written permission before modifying or redistributing the code under the
+[interim license](LICENSE).
 For a bug report, include Python and package versions, the failing panel, and
 a minimal example with synthetic or public data. Remove credentials and
 private coordinates from shared logs.

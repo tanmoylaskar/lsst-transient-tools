@@ -116,6 +116,12 @@ with no matches. The Rubin coadd is a static image for context, not a
 difference image or proof of a host association. The dashboard helps you vet
 individual candidates; use your own selection pipeline to build the list.
 
-See [Contributing](CONTRIBUTING.md) for tests and [the release checklist](docs/releasing.md)
-for the proposed license and live Rubin checks. This is a release draft; no
-public reuse license has been applied yet.
+## License
+
+The [interim license](LICENSE) permits noncommercial use of the software as
+provided. Commercial use, modification, and redistribution require separate
+written permission. The same terms apply to everyone, including universities.
+The software is provided as is, without warranty.
+
+See [Contributing](CONTRIBUTING.md) for local checks and the
+[release checklist](docs/releasing.md) for live Rubin checks and future releases.
