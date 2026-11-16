@@ -54,7 +54,15 @@ def resolve_target(object_id, object_table, *, lightcurves=None, catalog=None):
             raise LookupError(f"{oid} not found within 2 arcsec of its position in catalog")
         lc = match["diaObjectForcedSource"].iloc[0]
     else:
-        raise ValueError("Supply lightcurves, a nested light curve, or catalog")
+        raise ValueError(
+            f"No light curve was supplied for diaObjectId {oid}. "
+            "A pandas summary table provides the candidate ID and coordinates, "
+            "but does not contain visit-level photometry. Pass an open LSDB "
+            "catalog containing the candidate's diaObjectForcedSource measurements:\n"
+            "    inspect_transient(candidate_id, object_table=selected_candidates, "
+            "catalog=photometry_catalog)\n"
+            "If you already have a pandas table of measurements, pass it as lightcurves= instead."
+        )
     if not isinstance(lc, pd.DataFrame) or lc.empty:
         raise ValueError(f"No light-curve measurements supplied for {oid}")
     missing = set(CURVE_COLUMNS).difference(lc.columns)
