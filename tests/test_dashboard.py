@@ -11,7 +11,7 @@ from rubin_transient_dashboard import inspect_transient, resolve_target
 
 class DashboardTest(unittest.TestCase):
     def setUp(self):
-        self.oid = 753900763427635843
+        self.oid = 100000000000000001
         self.objects = pd.DataFrame({"diaObjectId": [self.oid], "ra": [53.13], "dec": [-28.1]})
         self.curve = pd.DataFrame({
             "diaObjectId": list(map(str, [self.oid, self.oid, self.oid + 1])),

@@ -42,8 +42,9 @@ with no archive queries.
 ```python
 from rubin_transient_dashboard import inspect_transient
 
+candidate_id = my_filtered_candidates["diaObjectId"].iloc[0]
 inspection = inspect_transient(
-    753900763427635843,
+    candidate_id,
     object_table=my_filtered_candidates,
     lightcurves=my_photometry,
 )
@@ -78,7 +79,7 @@ enable just the panels you need: `rubin`, `legacy`, `ned`, `simbad`, `tns`, and
 from rubin_transient_dashboard import ALL_PANELS, inspect_transient
 
 inspection = inspect_transient(
-    753900763427635843,
+    candidate_id,
     object_table=my_filtered_candidates,
     catalog=dia,
     panels=ALL_PANELS,  # or e.g. ("legacy", "skybot", "ned")
@@ -105,7 +106,8 @@ For a figure without archive panels or notebook printing, use
 ## Examples, troubleshooting, and release status
 
 Run `python examples/offline_demo.py` after installing to reproduce the figure
-above without any archive access or credentials.
+above without any archive access or credentials. The demo uses the synthetic
+candidate ID `100000000000000001`.
 
 If a candidate is missing, check that the two tables use the same exact IDs
 and that the candidate table has one row per object. If a panel fails, look in
