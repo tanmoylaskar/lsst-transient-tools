@@ -21,7 +21,23 @@ What’s visible at that position? Has anything nearby already been reported?
 
 ## Install from a checkout
 
-Requires Python 3.10 or newer. From this directory:
+Requires Python 3.10 or newer. On the [Rubin Science Platform](https://data.lsst.cloud/),
+open **Notebook Aspect → Terminal** and clone and install the repository:
+
+```sh
+git clone https://github.com/tanmoylaskar/lsst-transient-tools.git
+cd lsst-transient-tools
+python -m pip install .
+```
+
+The repository is private, so authenticate with a GitHub account that has access.
+In the JupyterLab file browser, open
+[`examples/rubin_science_platform.ipynb`](examples/rubin_science_platform.ipynb).
+If the terminal and notebook use different Python environments, run
+`%pip install ..` in a notebook cell (from the `examples/` directory) and
+restart the kernel.
+
+If you already have a checkout, run the following from its root:
 
 ```sh
 python -m pip install .
