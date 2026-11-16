@@ -1,8 +1,19 @@
-# Rubin transient dashboard
+# LSST Transient Tools
 
-Inspect candidates you've already selected. The dashboard does not run any
-transient, Gaia, or hostless selection. It works with an in-memory candidate table
-and light curves, or it can retrieve a light curve from an LSDB catalog you supply.
+**Explore a Rubin transient candidate in one notebook view.** Give the dashboard
+a candidate ID from your own table and use it to ask: How did the flux change?
+What’s visible at that position? Has anything nearby already been reported?
+
+- **See the full light curve and zoom in on the strongest excursion.** Measurements
+  are colored by filter and shown with error bars. The zoom uses a one-day
+  window centered on the largest absolute difference flux, whether positive
+  or negative, and fits the visits actually observed.
+- **Compare the sky images.** Optionally display Rubin and Legacy Survey cutouts
+  side by side, with the candidate position marked in each.
+- **Look for possible counterparts or contaminants.** Optionally check NED,
+  SIMBAD, and the Transient Name Server for nearby entries. SkyBoT checks
+  whether a known Solar System object was predicted nearby at the time of
+  the strongest excursion.
 
 ![Full and zoomed light curves from synthetic photometry](docs/example-lightcurve.png)
 
@@ -22,7 +33,11 @@ The Rubin coadd panel additionally needs the Rubin Science Platform or an
 equivalent LSST environment with the Butler repository and collections
 accessible. LSDB is needed only if you supply an LSDB catalog.
 
-## Inspect your own tables
+## Quick start: plot a candidate from your own tables
+
+Start with one table of candidate IDs and sky positions and another with one
+row per photometry measurement. The call below displays the two light curves
+with no archive queries.
 
 ```python
 from rubin_transient_dashboard import inspect_transient
@@ -46,13 +61,18 @@ represent Rubin IDs exactly. Convert times to MJD TAI before passing them.
 Photometry is used as supplied, except that plotting omits nonfinite values,
 unknown bands, and measurements with nonpositive errors.
 
-If your candidate rows already contain pandas light curves in
-`diaObjectForcedSource`, omit `lightcurves`. If your filtered table has only IDs
-and coordinates, call with `object_table=my_filtered_candidates, catalog=dia`
-where `dia` is your open LSDB catalog with the nested photometry fields.
-The lookup uses the supplied coordinates to narrow the search.
+**Already have light curves nested in your candidate table?** If each row has
+a pandas light curve in `diaObjectForcedSource`, pass only `object_table`.
 
-## Enable archive panels
+**Only have IDs and coordinates?** Replace `lightcurves=my_photometry` with
+`catalog=dia`, where `dia` is an open LSDB catalog with the nested photometry
+fields. The dashboard looks up that candidate’s light curve using its position.
+
+## Add images and catalog lookups
+
+Keep the same inputs and pass `panels=ALL_PANELS` for the full dashboard, or
+enable just the panels you need: `rubin`, `legacy`, `ned`, `simbad`, `tns`, and
+`skybot`. Here’s an example using LSDB for photometry:
 
 ```python
 from rubin_transient_dashboard import ALL_PANELS, inspect_transient
@@ -67,8 +87,6 @@ inspection = inspect_transient(
 )
 ```
 
-- By default, only the full and zoomed light curves are displayed. The one-day
-  zoom centers on the largest absolute flux and fits the times actually observed.
 - Image panels mark the candidate and retain their native orientations.
   Legacy cutouts load in the notebook browser. The Rubin panel uses the
   `repository`, `collections`, and `coadd_band` settings.
@@ -93,7 +111,8 @@ If a candidate is missing, check that the two tables use the same exact IDs
 and that the candidate table has one row per object. If a panel fails, look in
 `inspection["errors"]`: a service error is different from a successful query
 with no matches. The Rubin coadd is a static image for context, not a
-difference image or proof of a host association.
+difference image or proof of a host association. The dashboard helps you vet
+individual candidates; use your own selection pipeline to build the list.
 
 See [Contributing](CONTRIBUTING.md) for tests and [the release checklist](docs/releasing.md)
 for the proposed license and live Rubin checks. This is a release draft; no
