@@ -80,9 +80,29 @@ unknown bands, and measurements with nonpositive errors.
 **Already have light curves nested in your candidate table?** If each row has
 a pandas light curve in `diaObjectForcedSource`, pass only `object_table`.
 
-**Only have IDs and coordinates?** Replace `lightcurves=my_photometry` with
-`catalog=dia`, where `dia` is an open LSDB catalog with the nested photometry
-fields. The dashboard looks up that candidate’s light curve using its position.
+## Load light curves for a filtered pandas table
+
+If your selection produced a pandas summary with `diaObjectId`, `ra`, and
+`dec` but no visit-level photometry, pass that table as `object_table` and
+the open LSDB photometry catalog as `catalog`. The catalog must contain the
+selected objects and their nested `diaObjectForcedSource` measurements.
+
+```python
+from rubin_transient_dashboard import inspect_transient
+
+# selected_candidates is your filtered pandas table.
+# photometry_catalog is your open LSDB catalog with forced photometry.
+for candidate_id in selected_candidates["diaObjectId"]:
+    inspection = inspect_transient(
+        candidate_id,
+        object_table=selected_candidates,
+        catalog=photometry_catalog,
+    )
+```
+
+The summary table supplies the IDs and positions; the dashboard uses them to
+look up each light curve in the catalog. It does not rerun your selection or
+apply cuts that were used only to calculate summary features.
 
 ## Add images and catalog lookups
 
@@ -96,7 +116,7 @@ from rubin_transient_dashboard import ALL_PANELS, inspect_transient
 inspection = inspect_transient(
     candidate_id,
     object_table=my_filtered_candidates,
-    catalog=dia,
+    catalog=photometry_catalog,
     panels=ALL_PANELS,  # or e.g. ("legacy", "skybot", "ned")
     neighbor_radius_arcsec=2,
     skybot_radius_arcsec=10,
